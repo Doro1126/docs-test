@@ -1,0 +1,22 @@
+# main.yml
+name: docs gurufin com main branch CI/CD
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    name: deploy
+    runs-on: ubuntu-22.04 # 실행될 인스턴스 OS와 버전
+
+    steps:
+      - name: excuting remote ssh commands
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.REMOTE_SSH_HOST }}
+          username: seonho
+          key: ${{ secrets.REMOTE_SSG_KEY }}
+          port: ${{ secrets.REMOTE_SSH_PORT }}
+          script: | 
+            touch /home/seonho/legend.txt
