@@ -38,4 +38,4 @@ jobs:
           key: ${{ secrets.REMOTE_SSH_KEY }}
           port: ${{ secrets.REMOTE_SSH_PORT }}
           script: | 
-            touch /home/ubuntu/legend2.txt
+            touch /home/ubuntu/legend3.txt
