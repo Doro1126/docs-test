@@ -10,9 +10,26 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - name: Get Public IP
-        id: ip
-        uses: haythem/public-ip@v1.3
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node 20.19.4
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.4'
+          cache: 'npm' 
+
+      - name: Use npm 10.8.2
+        run: |
+          npm i -g npm@10.8.2
+          node -v
+          npm -v
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build
+        run: npm run build
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -21,30 +38,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: 'ap-northeast-2'
 
-      - name: Add GitHub Actions IP
+      - name: Sync build/ to S3
         run: |
-          aws ec2 authorize-security-group-ingress \
-              --group-id ${{ secrets.SECURITY_GROUP_ID }} \
-              --protocol tcp \
-              --port 22 \
-              --cidr ${{ steps.ip.outputs.ipv4 }}/32
-
-      - name: excuting remote ssh commands
-        uses: appleboy/ssh-action@v0.1.3
-        with:
-          host: ${{ secrets.REMOTE_SSH_HOST }}
-          username: ${{ secrets.REMOTE_SSH_USER }}
-          key: ${{ secrets.REMOTE_SSH_KEY }}
-          port: ${{ secrets.REMOTE_SSH_PORT }}
-          script: | 
-            mkdir /home/ubuntu/test
-            cd /home/ubuntu/test
-            touch legend.txt
-
-      - name: Remove GitHub Actions IP
-        run: |
-          aws ec2 revoke-security-group-ingress \
-              --group-id ${{ secrets.SECURITY_GROUP_ID }} \
-              --protocol tcp \
-              --port 22 \
-              --cidr ${{ steps.ip.outputs.ipv4 }}/32
+          aws s3 sync build s3://${{ secrets.S3_BUCKET }}
